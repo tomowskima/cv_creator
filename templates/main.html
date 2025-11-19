@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kreator CV</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .main-container {
+            display: flex;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .sidebar {
+            width: calc(250px + 1cm);
+            min-width: 250px;
+            max-height: calc(100vh - 100px);
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            position: sticky;
+            top: 20px;
+            overflow-y: auto;
+        }
+        
+        .sidebar h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .sidebar-section {
+            margin-bottom: 15px;
+        }
+        
+        .sidebar-section strong {
+            color: #34495e;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .main-content {
+            flex: 1;
+            min-width: calc(500px + 2cm);
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #ecf0f1;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            background: #f5f5f5;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            color: #7f8c8d;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            margin-right: 5px;
+            transition: all 0.3s;
+        }
+        
+        .tab:hover {
+            background: #ecf0f1;
+        }
+        
+        .tab.active {
+            background: #3498db;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .messages-container {
+            max-height: 500px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .message {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .user {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            margin-left: 20px;
+        }
+        
+        .assistant {
+            background-color: #f5f5f5;
+            border-left: 4px solid #95a5a6;
+            margin-right: 20px;
+        }
+        
+        .chat-form {
+            border-top: 1px solid #ecf0f1;
+            padding-top: 20px;
+        }
+        
+        .chat-form textarea {
+            width: 100%;
+            min-height: 100px;
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+<h1>Kreator CV</h1>
+
+<div class="main-container">
+    <!-- Sidebar z danymi -->
+    <div class="sidebar">
+        <h3>Twoje dane</h3>
+        <div id="sidebar-content">
+            <p style="color: #7f8c8d; font-style: italic;">Wypełnij formularz, aby zobaczyć dane.</p>
+        </div>
+    </div>
+    
+    <!-- Główny obszar z zakładkami -->
+    <div class="main-content">
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('form', this)">Formularz CV</button>
+            <button class="tab" onclick="switchTab('chat', this)">CV Coach</button>
+        </div>
+        
+        <!-- Zakładka: Formularz -->
+        <div id="tab-form" class="tab-content active">
+            <form id="cv-form" action="/generate-cv" method="post" onsubmit="updateSidebar(); return true;">
+                <h2>Dane podstawowe</h2>
+                <label>Imię i nazwisko:
+                    <input type="text" name="full_name" id="full_name" required>
+                </label><br>
+
+                <label>Email:
+                    <input type="email" name="email" id="email" required>
+                </label><br>
+
+                <label>Telefon:
+                    <input type="text" name="phone" id="phone" required>
+                </label><br>
+
+                <label>Docelowa rola:
+                    <input type="text" name="target_role" id="target_role" placeholder="np. Solution Architect" required>
+                </label><br>
+
+                <h2>Profil</h2>
+                <label>
+                    Typ profilu:
+                    <select name="profile_type" id="profile_type">
+                        <option value="experienced">Doświadczony</option>
+                        <option value="inexperienced">Niedoświadczony</option>
+                    </select>
+                </label><br>
+
+                <label>
+                    Styl CV:
+                    <select name="cv_variant" id="cv_variant">
+                        <option value="variant_a">Klasyczny (tradycyjny, formalny)</option>
+                        <option value="variant_b">Nowoczesny (minimalistyczny, czysty)</option>
+                    </select>
+                </label><br>
+
+                <h2>Umiejętności</h2>
+                <label>Wpisz umiejętności (po przecinku lub każdą w osobnej linii):
+                    <textarea name="skills" id="skills" placeholder="Python, AWS, FastAPI" rows="8"></textarea>
+                </label><br>
+
+                <h2>Doświadczenie (na start jedno)</h2>
+                <label>Stanowisko:
+                    <input type="text" name="exp_role" id="exp_role">
+                </label><br>
+                <label>Firma:
+                    <input type="text" name="exp_company" id="exp_company">
+                </label><br>
+                <label>Data rozpoczęcia:
+                    <input type="date" name="exp_start_date" id="exp_start_date">
+                </label><br>
+                <label>Data zakończenia (zostaw puste = obecnie):
+                    <input type="date" name="exp_end_date" id="exp_end_date">
+                </label><br>
+                <label>Opis doświadczenia (możesz wpisać wiele linii):
+                    <textarea name="exp_description_raw" id="exp_description_raw" rows="12"></textarea>
+                </label><br>
+                <button type="button" onclick="suggestExperience()">Zaproponuj opis doświadczenia</button>
+                <div id="exp_suggestions"></div>
+
+                <h2>Edukacja (na start jedna)</h2>
+                <label>Szkoła:
+                    <input type="text" name="edu_school" id="edu_school">
+                </label><br>
+                <label>Kierunek/tytuł:
+                    <input type="text" name="edu_degree" id="edu_degree">
+                </label><br>
+                <label>Data rozpoczęcia:
+                    <input type="date" name="edu_start_date" id="edu_start_date">
+                </label><br>
+                <label>Data zakończenia:
+                    <input type="date" name="edu_end_date" id="edu_end_date">
+                </label><br>
+
+                <br>
+                <button type="submit">Generuj podgląd CV (HTML)</button>
+            </form>
+        </div>
+        
+        <!-- Zakładka: Chat -->
+        <div id="tab-chat" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="margin: 0;">CV Coach</h3>
+                <button type="button" onclick="clearChatHistory()" style="padding: 6px 12px; font-size: 12px; background: #95a5a6; color: white; border: none; border-radius: 4px; cursor: pointer;">Wyczyść historię</button>
+            </div>
+            <div class="messages-container" id="chat-messages">
+                <div class="message assistant">
+                    <p><strong>Asystent:</strong> Cześć! Jestem Twoim asystentem CV.</p>
+                </div>
+            </div>
+            
+            <form class="chat-form" onsubmit="sendChatMessage(event)">
+                <label>Twoja wiadomość:
+                    <textarea id="chat-input" rows="4" required></textarea>
+                </label><br>
+                <button type="submit">Wyślij</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script>
+// Przełączanie zakładek
+function switchTab(tabName, buttonElement) {
+    // Ukryj wszystkie zakładki
+    document.querySelectorAll('.tab-content').forEach(function(tab) {
+        tab.classList.remove('active');
+    });
+    
+    // Usuń aktywną klasę z wszystkich przycisków
+    document.querySelectorAll('.tab').forEach(function(btn) {
+        btn.classList.remove('active');
+    });
+    
+    // Pokaż wybraną zakładkę
+    document.getElementById('tab-' + tabName).classList.add('active');
+    
+    // Aktywuj przycisk
+    if (buttonElement) {
+        buttonElement.classList.add('active');
+    }
+    
+    // Jeśli przełączamy na chat, przewiń do dołu
+    if (tabName === 'chat') {
+        setTimeout(scrollChatToBottom, 100);
+        // Sprawdź czy trzeba wysłać kontekst
+        sendInitialContextIfNeeded();
+    }
+}
+
+// Aktualizacja sidebara z danymi formularza
+function updateSidebar() {
+    var sidebar = document.getElementById('sidebar-content');
+    var html = '';
+    
+    var fullName = document.getElementById('full_name').value;
+    var email = document.getElementById('email').value;
+    var phone = document.getElementById('phone').value;
+    var targetRole = document.getElementById('target_role').value;
+    var skills = document.getElementById('skills').value;
+    var expRole = document.getElementById('exp_role').value;
+    var expCompany = document.getElementById('exp_company').value;
+    var eduSchool = document.getElementById('edu_school').value;
+    var eduDegree = document.getElementById('edu_degree').value;
+    
+    if (fullName || email || phone || targetRole || skills) {
+        if (fullName) {
+            html += '<div class="sidebar-section"><strong>Imię i nazwisko:</strong>' + fullName + '</div>';
+        }
+        if (email) {
+            html += '<div class="sidebar-section"><strong>Email:</strong>' + email + '</div>';
+        }
+        if (phone) {
+            html += '<div class="sidebar-section"><strong>Telefon:</strong>' + phone + '</div>';
+        }
+        if (targetRole) {
+            html += '<div class="sidebar-section"><strong>Docelowa rola:</strong>' + targetRole + '</div>';
+        }
+        if (skills) {
+            html += '<div class="sidebar-section"><strong>Umiejętności:</strong>' + skills.replace(/\n/g, ', ') + '</div>';
+        }
+        if (expRole && expCompany) {
+            html += '<div class="sidebar-section"><strong>Doświadczenie:</strong>' + expRole + '<br><small>' + expCompany + '</small></div>';
+        }
+        if (eduDegree && eduSchool) {
+            html += '<div class="sidebar-section"><strong>Edukacja:</strong>' + eduDegree + '<br><small>' + eduSchool + '</small></div>';
+        }
+    } else {
+        html = '<p style="color: #7f8c8d; font-style: italic;">Wypełnij formularz, aby zobaczyć dane.</p>';
+    }
+    
+    sidebar.innerHTML = html;
+}
+
+// Zapisz dane formularza do localStorage
+function saveFormData() {
+    var formData = getFormData();
+    localStorage.setItem('cvFormData', JSON.stringify(formData));
+}
+
+// Wczytaj dane formularza z localStorage
+function loadFormData() {
+    var saved = localStorage.getItem('cvFormData');
+    if (saved) {
+        var formData = JSON.parse(saved);
+        
+        if (formData.full_name) document.getElementById('full_name').value = formData.full_name;
+        if (formData.email) document.getElementById('email').value = formData.email;
+        if (formData.phone) document.getElementById('phone').value = formData.phone;
+        if (formData.target_role) document.getElementById('target_role').value = formData.target_role;
+        if (formData.skills) document.getElementById('skills').value = formData.skills;
+        if (formData.exp_role) document.getElementById('exp_role').value = formData.exp_role;
+        if (formData.exp_company) document.getElementById('exp_company').value = formData.exp_company;
+        if (formData.exp_description_raw) document.getElementById('exp_description_raw').value = formData.exp_description_raw;
+        if (formData.edu_school) document.getElementById('edu_school').value = formData.edu_school;
+        if (formData.edu_degree) document.getElementById('edu_degree').value = formData.edu_degree;
+        
+        // Aktualizuj sidebar po wczytaniu danych
+        updateSidebar();
+    }
+}
+
+// Obsługa zmian w formularzu - aktualizacja sidebara na żywo i zapisywanie
+document.addEventListener('DOMContentLoaded', function() {
+    // Wczytaj zapisane dane formularza
+    loadFormData();
+    
+    var formInputs = document.querySelectorAll('#cv-form input, #cv-form textarea, #cv-form select');
+    formInputs.forEach(function(input) {
+        input.addEventListener('input', function() {
+            updateSidebar();
+            saveFormData();
+        });
+        input.addEventListener('change', function() {
+            updateSidebar();
+            saveFormData();
+        });
+    });
+    
+    // Wczytaj historię chatu z localStorage
+    loadChatHistory();
+});
+
+// Wysyłanie wiadomości w chacie
+function sendChatMessage(event) {
+    event.preventDefault();
+    
+    var input = document.getElementById('chat-input');
+    var message = input.value.trim();
+    if (!message) return;
+    
+    // Dodaj wiadomość użytkownika
+    addChatMessage('user', message);
+    input.value = '';
+    
+    // Pokaż ładowanie
+    var loadingId = addChatMessage('assistant', '⏳ Piszę odpowiedź...');
+    
+    // Pobierz historię z localStorage
+    var history = getChatHistory();
+    history.push({ role: 'user', content: message });
+    
+    // Zbierz dane z formularza
+    var formData = getFormData();
+    
+    // Wyślij do API
+    fetch('/api/assistant/chat', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ 
+            messages: history,
+            candidate_data: formData
+        })
+    })
+    .then(function(resp) {
+        if (!resp.ok) throw new Error('Błąd: ' + resp.status);
+        return resp.json();
+    })
+    .then(function(data) {
+        // Usuń ładowanie
+        var loadingEl = document.getElementById(loadingId);
+        if (loadingEl) loadingEl.remove();
+        
+        // Dodaj odpowiedź
+        history.push({ role: 'assistant', content: data.response });
+        addChatMessage('assistant', data.response);
+        
+        // Zapisz historię
+        saveChatHistory(history);
+    })
+    .catch(function(error) {
+        var loadingEl = document.getElementById(loadingId);
+        if (loadingEl) loadingEl.remove();
+        addChatMessage('assistant', '❌ Błąd: ' + error.message);
+    });
+}
+
+function addChatMessage(role, content) {
+    var container = document.getElementById('chat-messages');
+    if (!container) return '';
+    
+    var msgDiv = document.createElement('div');
+    var msgId = 'msg-' + Date.now() + '-' + Math.random();
+    msgDiv.id = msgId;
+    msgDiv.className = 'message ' + role;
+    
+    var label = role === 'user' ? 'Ty' : 'Asystent';
+    msgDiv.innerHTML = '<p><strong>' + label + ':</strong></p><p>' + content + '</p>';
+    
+    container.appendChild(msgDiv);
+    scrollChatToBottom();
+    
+    return msgId;
+}
+
+function scrollChatToBottom() {
+    var container = document.getElementById('chat-messages');
+    if (container) {
+        container.scrollTop = container.scrollHeight;
+    }
+}
+
+// Pobierz dane z formularza
+function getFormData() {
+    return {
+        full_name: document.getElementById('full_name').value || '',
+        email: document.getElementById('email').value || '',
+        phone: document.getElementById('phone').value || '',
+        target_role: document.getElementById('target_role').value || '',
+        skills: document.getElementById('skills').value || '',
+        exp_role: document.getElementById('exp_role').value || '',
+        exp_company: document.getElementById('exp_company').value || '',
+        exp_description_raw: document.getElementById('exp_description_raw').value || '',
+        edu_school: document.getElementById('edu_school').value || '',
+        edu_degree: document.getElementById('edu_degree').value || '',
+    };
+}
+
+// Zarządzanie historią chatu w localStorage
+function getChatHistory() {
+    var history = localStorage.getItem('cvCoachHistory');
+    return history ? JSON.parse(history) : [];
+}
+
+function saveChatHistory(history) {
+    localStorage.setItem('cvCoachHistory', JSON.stringify(history));
+}
+
+function loadChatHistory() {
+    var history = getChatHistory();
+    var container = document.getElementById('chat-messages');
+    container.innerHTML = '';
+    
+    if (history.length > 0) {
+        history.forEach(function(msg) {
+            addChatMessage(msg.role, msg.content);
+        });
+    } else {
+        // Jeśli brak historii, pokaż powitalną wiadomość
+        addChatMessage('assistant', 'Cześć! Jestem Twoim asystentem CV.');
+    }
+}
+
+// Wyczyść historię chatu
+function clearChatHistory() {
+    if (confirm('Czy na pewno chcesz wyczyścić historię konwersacji?')) {
+        localStorage.removeItem('cvCoachHistory');
+        var container = document.getElementById('chat-messages');
+        container.innerHTML = '';
+        addChatMessage('assistant', 'Cześć! Jestem Twoim asystentem CV.');
+    }
+}
+
+// Przy przełączaniu na zakładkę chat, wyślij dane z formularza do asystenta (jeśli to pierwsza wiadomość)
+function sendInitialContextIfNeeded() {
+    var history = getChatHistory();
+    if (history.length === 0) {
+        var formData = getFormData();
+        var hasData = formData.full_name || formData.target_role || formData.skills || 
+                     (formData.exp_role && formData.exp_company);
+        
+        if (hasData) {
+            // Wyślij kontekst o danych użytkownika jako pierwszą wiadomość systemową
+            var contextMessage = 'Witaj! Mam już wypełnione dane w formularzu. ';
+            if (formData.full_name) contextMessage += 'Nazywam się ' + formData.full_name + '. ';
+            if (formData.target_role) contextMessage += 'Szukam pracy jako ' + formData.target_role + '. ';
+            if (formData.skills) contextMessage += 'Moje umiejętności to: ' + formData.skills.substring(0, 200) + '. ';
+            if (formData.exp_role && formData.exp_company) {
+                contextMessage += 'Mam doświadczenie jako ' + formData.exp_role + ' w ' + formData.exp_company + '. ';
+            }
+            contextMessage += 'Pomóż mi przygotować CV.';
+            
+            // Dodaj jako wiadomość użytkownika (ale nie pokazuj w UI, tylko w kontekście)
+            // Zamiast tego, po prostu upewnijmy się, że dane są przekazywane przy pierwszej prawdziwej wiadomości
+        }
+    }
+}
+
+// Funkcja sugerowania opisu doświadczenia
+function suggestExperience() {
+    var role = document.getElementById('exp_role').value.trim();
+    var company = document.getElementById('exp_company').value.trim();
+    var targetRole = document.getElementById('target_role').value.trim();
+
+    if (!role || !company || !targetRole) {
+        alert("Podaj stanowisko, firmę i rolę docelową, aby wygenerować opis.");
+        return;
+    }
+
+    var container = document.getElementById("exp_suggestions");
+    container.innerHTML = "<p style='color: #3498db;'>⏳ Generuję sugestie...</p>";
+
+    fetch("/api/suggest/experience", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            role: role,
+            company: company,
+            target_role: targetRole
+        })
+    })
+    .then(function(resp) {
+        if (!resp.ok) {
+            return resp.text().then(function(errorText) {
+                container.innerHTML = "<p style='color: red;'>Błąd podczas generowania sugestii. Status: " + resp.status + "</p>";
+                throw new Error("HTTP " + resp.status);
+            });
+        }
+        return resp.json();
+    })
+    .then(function(data) {
+        if (!data.variants || data.variants.length === 0) {
+            container.innerHTML = "<p style='color: orange;'>Nie udało się wygenerować sugestii. Spróbuj ponownie.</p>";
+            return;
+        }
+
+        container.innerHTML = "";
+
+        data.variants.forEach(function(v, idx) {
+            var div = document.createElement("div");
+            div.style.margin = "10px 0";
+            div.style.padding = "15px";
+            div.style.border = "1px solid #3498db";
+            div.style.borderRadius = "5px";
+            div.style.background = "#f8f9fa";
+
+            var p = document.createElement("p");
+            p.textContent = v;
+            p.style.marginBottom = "10px";
+            div.appendChild(p);
+
+            var btn = document.createElement("button");
+            btn.type = "button";
+            btn.textContent = "Wstaw wersję " + (idx + 1);
+            btn.onclick = function() {
+                document.getElementById("exp_description_raw").value = v;
+                container.innerHTML = "<p style='color: green;'>✓ Wersja " + (idx + 1) + " została wstawiona!</p>";
+                updateSidebar();
+            };
+            div.appendChild(btn);
+
+            container.appendChild(div);
+        });
+    })
+    .catch(function(error) {
+        console.error("Błąd:", error);
+        container.innerHTML = "<p style='color: red;'>Błąd: " + error.message + "</p>";
+    });
+}
+
+// Konwersja dat na lata dla backendu i formatowanie umiejętności
+document.querySelector('#cv-form').addEventListener('submit', function(e) {
+    // Formatowanie umiejętności - zamiana na przecinki
+    var skillsTextarea = this.querySelector('textarea[name="skills"]');
+    if (skillsTextarea && skillsTextarea.value) {
+        var skillsLines = skillsTextarea.value.split('\n').map(function(s) { return s.trim(); }).filter(function(s) { return s; });
+        var skillsComma = skillsLines.join(', ');
+        var hiddenSkills = document.createElement('input');
+        hiddenSkills.type = 'hidden';
+        hiddenSkills.name = 'skills';
+        hiddenSkills.value = skillsComma;
+        this.appendChild(hiddenSkills);
+        skillsTextarea.disabled = true;
+    }
+    
+    // Doświadczenie
+    var expStartDate = document.getElementById('exp_start_date').value;
+    var expEndDate = document.getElementById('exp_end_date').value;
+    
+    if (expStartDate) {
+        var year = new Date(expStartDate).getFullYear();
+        var hiddenStart = document.createElement('input');
+        hiddenStart.type = 'hidden';
+        hiddenStart.name = 'exp_start_year';
+        hiddenStart.value = year;
+        this.appendChild(hiddenStart);
+    }
+    
+    if (expEndDate) {
+        var year = new Date(expEndDate).getFullYear();
+        var hiddenEnd = document.createElement('input');
+        hiddenEnd.type = 'hidden';
+        hiddenEnd.name = 'exp_end_year';
+        hiddenEnd.value = year;
+        this.appendChild(hiddenEnd);
+    } else {
+        var hiddenEnd = document.createElement('input');
+        hiddenEnd.type = 'hidden';
+        hiddenEnd.name = 'exp_end_year';
+        hiddenEnd.value = '0';
+        this.appendChild(hiddenEnd);
+    }
+    
+    // Edukacja
+    var eduStartDate = document.getElementById('edu_start_date').value;
+    var eduEndDate = document.getElementById('edu_end_date').value;
+    
+    if (eduStartDate) {
+        var year = new Date(eduStartDate).getFullYear();
+        var hiddenStart = document.createElement('input');
+        hiddenStart.type = 'hidden';
+        hiddenStart.name = 'edu_start_year';
+        hiddenStart.value = year;
+        this.appendChild(hiddenStart);
+    }
+    
+    if (eduEndDate) {
+        var year = new Date(eduEndDate).getFullYear();
+        var hiddenEnd = document.createElement('input');
+        hiddenEnd.type = 'hidden';
+        hiddenEnd.name = 'edu_end_year';
+        hiddenEnd.value = year;
+        this.appendChild(hiddenEnd);
+    }
+    
+    // Otwórz w nowej zakładce
+    this.target = '_blank';
+});
+</script>
+
+</body>
+</html>
+

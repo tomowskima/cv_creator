@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>CV – {{ full_name }}</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            font-size: 13px; 
+            margin: 0; 
+            padding: 40px; 
+            max-width: 900px;
+            margin: 0 auto;
+            line-height: 1.6;
+            color: #2c3e50;
+            background: #fff;
+        }
+        h1 { 
+            font-size: 28px; 
+            margin-bottom: 8px; 
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 { 
+            font-size: 16px; 
+            margin-top: 24px; 
+            margin-bottom: 10px; 
+            font-weight: 600;
+            color: #34495e;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .section { 
+            margin-top: 20px; 
+        }
+        .section-title { 
+            font-weight: 600; 
+            color: #3498db;
+            font-size: 14px;
+            margin-bottom: 8px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        ul { 
+            margin-top: 8px; 
+            margin-left: 0;
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 6px;
+            color: #555;
+        }
+        p {
+            margin: 6px 0;
+            color: #555;
+        }
+        .contact-info {
+            color: #7f8c8d;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+        .role-target {
+            color: #3498db;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+        strong {
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+<h1>{{ full_name }}</h1>
+<p class="contact-info">{{ email }} | {{ phone }}</p>
+<p class="role-target">Docelowa rola: {{ target_role }}</p>
+
+<div class="section">
+    <div class="section-title">Podsumowanie</div>
+    <p>{{ summary }}</p>
+</div>
+
+{% if "experience" in sections_order and experience_sections %}
+<div class="section">
+    <div class="section-title">Doświadczenie</div>
+    {% for exp in experience_sections %}
+        <p><strong>{{ exp.item.role }}</strong>, {{ exp.item.company }} ({{ exp.item.start_year }} - {{ exp.item.end_year or "obecnie" }})</p>
+        <ul>
+            {% for bullet in exp.bullets %}
+            <li>{{ bullet }}</li>
+            {% endfor %}
+        </ul>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if "education" in sections_order and education %}
+<div class="section">
+    <div class="section-title">Edukacja</div>
+    {% for edu in education %}
+        <p><strong>{{ edu.degree }}</strong>, {{ edu.school }} ({{ edu.start_year }} - {{ edu.end_year }})</p>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if "skills" in sections_order and skills %}
+<div class="section">
+    <div class="section-title">Umiejętności</div>
+    <p>{{ ", ".join(skills) }}</p>
+</div>
+{% endif %}
+</body>
+</html>
+

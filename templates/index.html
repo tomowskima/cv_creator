@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kreator CV</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<h1>Kreator CV – wersja lokalna</h1>
+
+<form action="/generate-cv" method="post">
+    <h2>Dane podstawowe</h2>
+    <label>Imię i nazwisko:
+        <input type="text" name="full_name" required>
+    </label><br>
+
+    <label>Email:
+        <input type="email" name="email" required>
+    </label><br>
+
+    <label>Telefon:
+        <input type="text" name="phone" required>
+    </label><br>
+
+    <label>Docelowa rola:
+        <input type="text" name="target_role" placeholder="np. Solution Architect" required>
+    </label><br>
+
+    <h2>Profil</h2>
+    <label>
+        Typ profilu:
+        <select name="profile_type">
+            <option value="experienced">Doświadczony</option>
+            <option value="inexperienced">Niedoświadczony</option>
+        </select>
+    </label><br>
+
+    <label>
+        Styl CV:
+        <select name="cv_variant">
+            <option value="variant_a">Klasyczny (tradycyjny, formalny)</option>
+            <option value="variant_b">Nowoczesny (minimalistyczny, czysty)</option>
+        </select>
+    </label><br>
+
+    <h2>Umiejętności</h2>
+    <label>Wpisz umiejętności (po przecinku lub każdą w osobnej linii):
+        <textarea name="skills" placeholder="Python, AWS, FastAPI" rows="8"></textarea>
+    </label><br>
+
+    <h2>Doświadczenie (na start jedno)</h2>
+    <label>Stanowisko:
+        <input type="text" name="exp_role" id="exp_role">
+    </label><br>
+    <label>Firma:
+        <input type="text" name="exp_company" id="exp_company">
+    </label><br>
+    <label>Data rozpoczęcia:
+        <input type="date" name="exp_start_date" id="exp_start_date">
+    </label><br>
+    <label>Data zakończenia (zostaw puste = obecnie):
+        <input type="date" name="exp_end_date" id="exp_end_date">
+    </label><br>
+    <label>Opis doświadczenia (możesz wpisać wiele linii):
+        <textarea name="exp_description_raw" id="exp_description_raw" rows="12"></textarea>
+    </label><br>
+    <button type="button" onclick="suggestExperience()">Zaproponuj opis doświadczenia</button>
+    <div id="exp_suggestions"></div>
+
+    <h2>Edukacja (na start jedna)</h2>
+    <label>Szkoła:
+        <input type="text" name="edu_school">
+    </label><br>
+    <label>Kierunek/tytuł:
+        <input type="text" name="edu_degree">
+    </label><br>
+    <label>Data rozpoczęcia:
+        <input type="date" name="edu_start_date" id="edu_start_date">
+    </label><br>
+    <label>Data zakończenia:
+        <input type="date" name="edu_end_date" id="edu_end_date">
+    </label><br>
+
+    <br>
+    <button type="submit">Generuj podgląd CV (HTML)</button>
+</form>
+
+<script>
+// Funkcja sugerowania opisu doświadczenia - MUSI BYĆ NAJPIERW
+function suggestExperience() {
+    console.log("suggestExperience wywołana");
+    
+    var roleEl = document.getElementById('exp_role');
+    var companyEl = document.getElementById('exp_company');
+    var targetRoleEl = document.querySelector('input[name="target_role"]');
+    
+    var role = roleEl ? roleEl.value.trim() : '';
+    var company = companyEl ? companyEl.value.trim() : '';
+    var targetRole = targetRoleEl ? targetRoleEl.value.trim() : '';
+
+    if (!role || !company || !targetRole) {
+        alert("Podaj stanowisko, firmę i rolę docelową, aby wygenerować opis.");
+        return;
+    }
+
+    var container = document.getElementById("exp_suggestions");
+    if (!container) {
+        alert("Błąd: nie znaleziono kontenera na sugestie.");
+        return;
+    }
+    
+    container.innerHTML = "<p style='color: #3498db;'>⏳ Generuję sugestie... To może chwilę potrwać.</p>";
+
+    fetch("/api/suggest/experience", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            role: role,
+            company: company,
+            target_role: targetRole
+        })
+    })
+    .then(function(resp) {
+        if (!resp.ok) {
+            return resp.text().then(function(errorText) {
+                container.innerHTML = "<p style='color: red;'>Błąd podczas generowania sugestii. Status: " + resp.status + "</p>";
+                throw new Error("HTTP " + resp.status);
+            });
+        }
+        return resp.json();
+    })
+    .then(function(data) {
+        if (!data.variants || data.variants.length === 0) {
+            container.innerHTML = "<p style='color: orange;'>Nie udało się wygenerować sugestii. Spróbuj ponownie.</p>";
+            return;
+        }
+
+        container.innerHTML = "";
+
+        data.variants.forEach(function(v, idx) {
+            var div = document.createElement("div");
+            div.style.margin = "10px 0";
+            div.style.padding = "15px";
+            div.style.border = "1px solid #3498db";
+            div.style.borderRadius = "5px";
+            div.style.background = "#f8f9fa";
+
+            var p = document.createElement("p");
+            p.textContent = v;
+            p.style.marginBottom = "10px";
+            div.appendChild(p);
+
+            var btn = document.createElement("button");
+            btn.type = "button";
+            btn.textContent = "Wstaw wersję " + (idx + 1);
+            btn.onclick = function() {
+                document.getElementById("exp_description_raw").value = v;
+                container.innerHTML = "<p style='color: green;'>✓ Wersja " + (idx + 1) + " została wstawiona!</p>";
+            };
+            div.appendChild(btn);
+
+            container.appendChild(div);
+        });
+    })
+    .catch(function(error) {
+        console.error("Błąd:", error);
+        container.innerHTML = "<p style='color: red;'>Błąd: " + error.message + "</p>";
+    });
+}
+</script>
+
+<!-- Floating CV Coach Button -->
+<div id="cv-coach-bubble">
+    <a href="#" onclick="openCVCoachWithData(event)" title="Porozmawiaj z CV Coach">
+        <span>💬</span>
+        <span class="bubble-text">CV Coach</span>
+    </a>
+</div>
+
+<script>
+function openCVCoachWithData(event) {
+    event.preventDefault();
+    
+    // Zbierz dane z formularza
+    var form = document.querySelector('form[action="/generate-cv"]');
+    if (!form) {
+        window.location.href = '/assistant';
+        return;
+    }
+    
+    var fullNameEl = form.querySelector('input[name="full_name"]');
+    var emailEl = form.querySelector('input[name="email"]');
+    var phoneEl = form.querySelector('input[name="phone"]');
+    var targetRoleEl = form.querySelector('input[name="target_role"]');
+    var skillsEl = form.querySelector('textarea[name="skills"]');
+    
+    var fullName = fullNameEl ? fullNameEl.value : '';
+    var email = emailEl ? emailEl.value : '';
+    var phone = phoneEl ? phoneEl.value : '';
+    var targetRole = targetRoleEl ? targetRoleEl.value : '';
+    var skills = skillsEl ? skillsEl.value : '';
+    
+    // Utwórz URL z danymi
+    var params = new URLSearchParams();
+    if (fullName) params.append('full_name', fullName);
+    if (email) params.append('email', email);
+    if (phone) params.append('phone', phone);
+    if (targetRole) params.append('target_role', targetRole);
+    if (skills) params.append('skills', skills);
+    
+    window.location.href = '/assistant?' + params.toString();
+}
+</script>
+
+<script>
+// Konwersja dat na lata dla backendu i formatowanie umiejętności
+document.querySelector('form').addEventListener('submit', function(e) {
+    // Formatowanie umiejętności - zamiana na przecinki
+    const skillsTextarea = this.querySelector('textarea[name="skills"]');
+    if (skillsTextarea && skillsTextarea.value) {
+        const skillsLines = skillsTextarea.value.split('\n').map(s => s.trim()).filter(s => s);
+        const skillsComma = skillsLines.join(', ');
+        const hiddenSkills = document.createElement('input');
+        hiddenSkills.type = 'hidden';
+        hiddenSkills.name = 'skills';
+        hiddenSkills.value = skillsComma;
+        this.appendChild(hiddenSkills);
+        skillsTextarea.disabled = true; // Wyłącz textarea, żeby nie wysyłało wartości
+    }
+    
+    // Doświadczenie
+    const expStartDate = document.getElementById('exp_start_date').value;
+    const expEndDate = document.getElementById('exp_end_date').value;
+    
+    if (expStartDate) {
+        const year = new Date(expStartDate).getFullYear();
+        const hiddenStart = document.createElement('input');
+        hiddenStart.type = 'hidden';
+        hiddenStart.name = 'exp_start_year';
+        hiddenStart.value = year;
+        this.appendChild(hiddenStart);
+    }
+    
+    if (expEndDate) {
+        const year = new Date(expEndDate).getFullYear();
+        const hiddenEnd = document.createElement('input');
+        hiddenEnd.type = 'hidden';
+        hiddenEnd.name = 'exp_end_year';
+        hiddenEnd.value = year;
+        this.appendChild(hiddenEnd);
+    } else {
+        const hiddenEnd = document.createElement('input');
+        hiddenEnd.type = 'hidden';
+        hiddenEnd.name = 'exp_end_year';
+        hiddenEnd.value = '0';
+        this.appendChild(hiddenEnd);
+    }
+    
+    // Edukacja
+    const eduStartDate = document.getElementById('edu_start_date').value;
+    const eduEndDate = document.getElementById('edu_end_date').value;
+    
+    if (eduStartDate) {
+        const year = new Date(eduStartDate).getFullYear();
+        const hiddenStart = document.createElement('input');
+        hiddenStart.type = 'hidden';
+        hiddenStart.name = 'edu_start_year';
+        hiddenStart.value = year;
+        this.appendChild(hiddenStart);
+    }
+    
+    if (eduEndDate) {
+        const year = new Date(eduEndDate).getFullYear();
+        const hiddenEnd = document.createElement('input');
+        hiddenEnd.type = 'hidden';
+        hiddenEnd.name = 'edu_end_year';
+        hiddenEnd.value = year;
+        this.appendChild(hiddenEnd);
+    }
+    
+    // Otwórz w nowej zakładce
+    this.target = '_blank';
+});
+</script>
+
+</body>
+</html>
+

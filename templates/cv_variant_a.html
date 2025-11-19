@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>CV – {{ full_name }}</title>
+    <style>
+        body { 
+            font-family: 'Times New Roman', serif; 
+            font-size: 11pt; 
+            margin: 0; 
+            padding: 40px; 
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.4;
+            color: #000;
+        }
+        h1 { 
+            font-size: 18pt; 
+            margin-bottom: 8px; 
+            font-weight: bold;
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 8px;
+        }
+        h2 { 
+            font-size: 12pt; 
+            margin-top: 16px; 
+            margin-bottom: 6px; 
+            font-weight: bold;
+        }
+        .section { 
+            margin-top: 14px; 
+        }
+        .section-title { 
+            font-weight: bold; 
+            border-bottom: 1px solid #333; 
+            padding-bottom: 2px;
+            margin-bottom: 6px;
+        }
+        ul { 
+            margin-top: 4px; 
+            margin-left: 20px;
+        }
+        li {
+            margin-bottom: 3px;
+        }
+        p {
+            margin: 4px 0;
+        }
+    </style>
+</head>
+<body>
+<h1>{{ full_name }}</h1>
+<p>{{ email }} | {{ phone }}</p>
+<p>Docelowa rola: {{ target_role }}</p>
+
+<div class="section">
+    <div class="section-title">Podsumowanie</div>
+    <p>{{ summary }}</p>
+</div>
+
+{% if "experience" in sections_order and experience_sections %}
+<div class="section">
+    <div class="section-title">Doświadczenie</div>
+    {% for exp in experience_sections %}
+        <p><strong>{{ exp.item.role }}</strong>, {{ exp.item.company }} ({{ exp.item.start_year }} - {{ exp.item.end_year or "obecnie" }})</p>
+        <ul>
+            {% for bullet in exp.bullets %}
+            <li>{{ bullet }}</li>
+            {% endfor %}
+        </ul>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if "education" in sections_order and education %}
+<div class="section">
+    <div class="section-title">Edukacja</div>
+    {% for edu in education %}
+        <p><strong>{{ edu.degree }}</strong>, {{ edu.school }} ({{ edu.start_year }} - {{ edu.end_year }})</p>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if "skills" in sections_order and skills %}
+<div class="section">
+    <div class="section-title">Umiejętności</div>
+    <p>{{ ", ".join(skills) }}</p>
+</div>
+{% endif %}
+</body>
+</html>
+

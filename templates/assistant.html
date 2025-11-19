@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV Coach</title>
+    <link rel="stylesheet" href="/static/styles.css">
+    <style>
+        .assistant-container {
+            display: flex;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .sidebar {
+            flex: 1;
+            min-width: 250px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+        
+        .sidebar h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .sidebar-section {
+            margin-bottom: 15px;
+        }
+        
+        .sidebar-section strong {
+            color: #34495e;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .chat-area {
+            flex: 2;
+            min-width: 500px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .messages-container {
+            max-height: 500px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding: 10px;
+        }
+        
+        .message {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .user {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            margin-left: 20px;
+        }
+        
+        .assistant {
+            background-color: #f5f5f5;
+            border-left: 4px solid #95a5a6;
+            margin-right: 20px;
+        }
+        
+        .chat-form {
+            border-top: 1px solid #ecf0f1;
+            padding-top: 20px;
+        }
+        
+        .chat-form textarea {
+            width: 100%;
+            min-height: 100px;
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .assistant-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+<h1>CV Coach – asystent pisania CV</h1>
+
+<div class="assistant-container">
+    <!-- Sidebar z danymi kandydata -->
+    <div class="sidebar">
+        <h3>Twoje dane</h3>
+        {% if candidate_data %}
+            {% if candidate_data.full_name %}
+            <div class="sidebar-section">
+                <strong>Imię i nazwisko:</strong>
+                {{ candidate_data.full_name }}
+            </div>
+            {% endif %}
+            
+            {% if candidate_data.email %}
+            <div class="sidebar-section">
+                <strong>Email:</strong>
+                {{ candidate_data.email }}
+            </div>
+            {% endif %}
+            
+            {% if candidate_data.phone %}
+            <div class="sidebar-section">
+                <strong>Telefon:</strong>
+                {{ candidate_data.phone }}
+            </div>
+            {% endif %}
+            
+            {% if candidate_data.target_role %}
+            <div class="sidebar-section">
+                <strong>Docelowa rola:</strong>
+                {{ candidate_data.target_role }}
+            </div>
+            {% endif %}
+            
+            {% if candidate_data.skills %}
+            <div class="sidebar-section">
+                <strong>Umiejętności:</strong>
+                {{ candidate_data.skills }}
+            </div>
+            {% endif %}
+            
+            {% if candidate_data.experience %}
+            <div class="sidebar-section">
+                <strong>Doświadczenie:</strong>
+                {% for exp in candidate_data.experience %}
+                    <div style="margin-top: 5px;">
+                        {{ exp.role }}<br>
+                        <small>{{ exp.company }}</small>
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            {% if candidate_data.education %}
+            <div class="sidebar-section">
+                <strong>Edukacja:</strong>
+                {% for edu in candidate_data.education %}
+                    <div style="margin-top: 5px;">
+                        {{ edu.degree }}<br>
+                        <small>{{ edu.school }}</small>
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        {% else %}
+            <p style="color: #7f8c8d; font-style: italic;">Brak danych. Wypełnij formularz na stronie głównej.</p>
+        {% endif %}
+    </div>
+    
+    <!-- Obszar chatu -->
+    <div class="chat-area">
+        <div class="messages-container" id="messages-container">
+            {% if not messages %}
+            <div class="message assistant">
+                <p><strong>Asystent:</strong> Cześć! Jestem Twoim asystentem CV.</p>
+            </div>
+            {% else %}
+                {% for msg in messages %}
+                    <div class="message {{ msg.role }}">
+                        <p><strong>{{ "Ty" if msg.role == "user" else "Asystent" }}:</strong></p>
+                        <p>{{ msg.content }}</p>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        
+        <form method="post" action="/assistant" class="chat-form" onsubmit="scrollToBottom()">
+            <input type="hidden" name="history" value='{{ history | safe }}'>
+            {% if candidate_data %}
+                <input type="hidden" name="full_name" value="{{ candidate_data.full_name or '' }}">
+                <input type="hidden" name="email" value="{{ candidate_data.email or '' }}">
+                <input type="hidden" name="phone" value="{{ candidate_data.phone or '' }}">
+                <input type="hidden" name="target_role" value="{{ candidate_data.target_role or '' }}">
+                <input type="hidden" name="skills" value="{{ candidate_data.skills or '' }}">
+            {% endif %}
+            <label>Twoja wiadomość:
+                <textarea name="user_input" rows="4" required></textarea>
+            </label><br>
+            <button type="submit">Wyślij</button>
+        </form>
+    </div>
+</div>
+
+<p style="text-align: center; margin-top: 20px;"><a href="/">← Powrót do kreatora CV</a></p>
+
+<script>
+// Przewiń do dołu po załadowaniu strony (jeśli są wiadomości)
+window.addEventListener('DOMContentLoaded', function() {
+    scrollToBottom();
+});
+
+// Przewiń do dołu po wysłaniu formularza
+function scrollToBottom() {
+    setTimeout(function() {
+        var container = document.getElementById('messages-container');
+        if (container) {
+            container.scrollTop = container.scrollHeight;
+        }
+    }, 100);
+}
+
+// Przewiń do dołu po załadowaniu strony
+window.addEventListener('load', function() {
+    scrollToBottom();
+});
+</script>
+</body>
+</html>
